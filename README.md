@@ -6,12 +6,11 @@ Made with pygame-ce.
 
 ## Design idea
 
-The screen size will be initialised as 700x720px.
+The screen size will be initialised as 710x755px.
 
-The game window will be used of 700x700px.
+The game window will be used of 710x705px.(I'll rethink on its geometry later)
 
-20px would be used to show the score and game status like ▶️ and ⏸️.
-
-The snake body cordinate idea was suggested by [@AryanTheIndoDev](https://github.com/AryanTheIndoDev).
+50px would be used to show the score and game status like ▶️ and ⏸️.
+The snake body coordinate idea was suggested by [@AryanTheIndoDev](https://github.com/AryanTheIndoDev).
 
 ## In progress...
