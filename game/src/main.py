@@ -1,5 +1,5 @@
 import pygame as pg
-
+import random as rd
 pg.init()
 
 SCREEN_SIZE = (500, 760)
@@ -11,7 +11,7 @@ SHELL_SIZE = 40
 GRID_COLOR = '#4B3F55' # light shade
 
 
-MOVE_INTERVAL = 500
+MOVE_INTERVAL = 200
 MOVE_EVENT = pg.event.custom_type()
 pg.time.set_timer(MOVE_EVENT, MOVE_INTERVAL)
 
@@ -29,8 +29,13 @@ class Snake(pg.sprite.Sprite):
         self.x = x
         self.y = y
         self.body = []
+        self.init_len =4
         self.direction = 'RIGHT'
-        self.init_len = 4
+        self.next_direction = 'RIGHT'
+        self.alive = True
+        self.ate_food = False
+        self.score = 0
+        
         for n in range(self.init_len):
             self.body.append((x-n,y))
         
@@ -49,22 +54,39 @@ class Snake(pg.sprite.Sprite):
                 pg.draw.rect(screen, 'Green', (x_px, y_px, SHELL_SIZE, SHELL_SIZE))
                 
                 
-    def movement(self):
-        self.body.pop()
-        x,y = self.body[0]
+    def movement(self, food):
+        self.direction = self.next_direction
+    
+        x, y = self.body[0]
+    
         if self.direction == 'RIGHT':
-            x+=1
+            x += 1
         elif self.direction == 'LEFT':
-            x-=1
+            x -= 1
         elif self.direction == 'UP':
-            y-=1
+            y -= 1
         elif self.direction == 'DOWN':
-            y+=1
-            
+            y += 1
+    
         x %= GRID_WIDTH
         y %= GRID_HEIGHT
         
-        self.body.insert(0, (x,y))
+        new_head = (x, y)
+        self.ate_food = new_head == food.position
+        
+        self.body.insert(0, new_head)
+        
+        if not self.ate_food:
+            self.body.pop()
+        else:
+            food.spawn()
+            self.score += 1
+            print(f"{self.score=}")
+            
+        for segment in self.body[1:]:
+            if self.body[0] == segment:
+                self.alive = False
+      
       
       
 def draw_shells():
@@ -83,32 +105,85 @@ def draw_shells():
     pg.draw.rect(screen, 'blue', hud)
     pg.draw.rect(screen, 'black', hud , BORDER_WIDTH)
 
+class Food(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.position = None
+        self.spawn()
+
+    def spawn(self):
+        available_shells = [
+        (x, y) 
+        for x in range(GRID_WIDTH) 
+        for y in range(GRID_HEIGHT) 
+        if (x,y) not in player.body
+        ]
+        self.position = rd.choice(available_shells)
+        
+
+    def draw(self):
+        x, y = self.position
+    
+        center_x = BORDER_WIDTH + x * SHELL_SIZE + SHELL_SIZE // 2
+        center_y = BORDER_WIDTH + y * SHELL_SIZE + SHELL_SIZE // 2
+    
+        pg.draw.circle(
+            screen,
+            'red',
+            (center_x, center_y),
+            SHELL_SIZE // 2
+        )
+        
+
+
+
+
 running = True
 
 
-player = Snake(4,8)
-
+player = Snake(4,3)
+food = Food()
+font = pg.font.Font(None, 60)
 while running:
+    if not player.alive:
+        running = False
+        break
+        
+    
+    
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
         if event.type == MOVE_EVENT:
-            player.movement()
+            player.movement(food)
         if event.type == pg.KEYDOWN:
             if event.key in (pg.K_w, pg.K_UP) and player.direction != 'DOWN':
-                player.direction = 'UP'
+                if player.direction != 'UP':
+                    player.next_direction = 'UP'
+        
             elif event.key in (pg.K_s, pg.K_DOWN) and player.direction != 'UP':
-                player.direction = 'DOWN'
+                if player.direction != 'DOWN':
+                    player.next_direction = 'DOWN'
+        
             elif event.key in (pg.K_a, pg.K_LEFT) and player.direction != 'RIGHT':
-                player.direction = 'LEFT'
+                if player.direction != 'LEFT':
+                    player.next_direction = 'LEFT'
+        
             elif event.key in (pg.K_d, pg.K_RIGHT) and player.direction != 'LEFT':
-                player.direction = 'RIGHT'
-
+                if player.direction != 'RIGHT':
+                    player.next_direction = 'RIGHT'
+        
+    score = font.render(f"SCORE: {player.score}", True, 'black')
     screen.fill(BG)
+    
+        
     draw_shells()
     player.draw()
+    food.draw()
+    screen.blit(score, (45, 695))
     pg.display.flip()
     
+
     
     
     clock.tick(FPS)
