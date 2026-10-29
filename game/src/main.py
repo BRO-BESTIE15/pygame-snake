@@ -14,7 +14,7 @@ FPS = 60
 BG = 'grey'
 CELL_SIZE = 50
 GRID_COLOR = '#4B3F55' # light shade
-MOVE_INTERVAL = 200
+MOVE_INTERVAL = 500
 
 
 # derived values
