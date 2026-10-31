@@ -7,12 +7,12 @@ pg.init() # initialising pygame
 
 
 # constants
-SCREEN_SIZE = (720, 1280)
-HUD_HEIGHT  = 260
+SCREEN_SIZE = (720, 670)
+HUD_HEIGHT  = 50
 BORDER_WIDTH = 10
 FPS = 60
 BG = 'grey'
-CELL_SIZE = 50
+CELL_SIZE = 25
 GRID_COLOR = '#4B3F55' # light shade
 MOVE_INTERVAL = 500
 
@@ -55,7 +55,7 @@ class Snake():
         """initialise class and create list[tuple] of snakes body as per initial length"""
         self.x = x
         self.y = y
-        self.init_len = 4
+        self.init_len = 50
         self.body = [(x-n, y) for n in range(self.init_len)]
         self.direction = 'RIGHT'
         self.next_direction = 'RIGHT'
@@ -162,7 +162,7 @@ def draw_hud(player):
     pg.draw.rect(screen, 'lightblue', hud)
     pg.draw.rect(screen, 'black', hud , BORDER_WIDTH)
 
-    font = pg.font.Font(None, 60)
+    font = pg.font.Font(None, 40)
     score = font.render(f"SCORE: {player.score}", True, 'black')
     #screen.blit(score, (45, 695))
     score_rect = score.get_rect()
@@ -271,5 +271,83 @@ def game():
         clock.tick(FPS)
 
 
-game()
-pg.quit()
+def game_over():
+    
+    overlay = pg.Rect(0, 0, 500, 500)
+    overlay.center = screen.get_rect().center
+    pg.draw.rect(screen, 'black', overlay)
+    pg.draw.rect(screen, 'white', overlay, 5)
+    
+    button1 = pg.Rect(0, 0, 300, 80)
+    button1.center = (overlay.centerx, overlay.centery - 50)
+    
+    button2 = pg.Rect(0, 0, 300, 80)
+    button2.center = (overlay.centerx, overlay.centery + 70)
+    
+    font = pg.font.Font(None, 80)
+    title_font = pg.font.Font(None, 55)
+    title = title_font.render("GAME OVER", True, 'white')
+    title_rect = title.get_rect(
+    center=(overlay.centerx, overlay.top + 60)
+)
+
+
+
+    run = True
+    retry = False
+    
+    while run:
+    
+        # ---------------- EVENTS ----------------
+        for event in pg.event.get():
+    
+            if event.type == pg.QUIT:
+                run = False
+    
+            if event.type == pg.MOUSEBUTTONDOWN:
+                if event.button == 1:
+    
+                    if button1.collidepoint(event.pos):
+                        retry = True
+                        run = False
+    
+                    elif button2.collidepoint(event.pos):
+                        run = False
+    
+        # ---------------- DRAWING ----------------
+        pg.draw.rect(screen, 'grey', button1, border_radius=15)
+        pg.draw.rect(screen, 'grey', button2, border_radius=15)
+        screen.blit(title, title_rect)
+        txt1 = font.render("Retry", True, 'white')
+        txt2 = font.render("Quit", True, 'white')
+        
+        screen.blit(txt1, txt1.get_rect(center=button1.center))
+        screen.blit(txt2, txt2.get_rect(center=button2.center))
+        
+        pg.display.flip()
+        
+        clock.tick(60)
+
+    return retry
+
+def main():
+    running = True
+
+    while running:
+        game()
+
+        if not pg.get_init():
+            break
+
+        retry = game_over()
+
+        if not retry:
+            running = False
+
+    pg.quit()
+
+
+if __name__ == "__main__":
+    main()
+    
+    
