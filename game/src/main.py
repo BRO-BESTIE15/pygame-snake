@@ -1,7 +1,15 @@
 
+from __future__ import annotations
+
 # imports
+from typing import Literal
+
 import pygame as pg
 import random as rd
+
+
+Direction = Literal['UP', 'DOWN', 'LEFT', 'RIGHT']
+Position = tuple[int, int]
 
 pg.init() # initialising pygame
 
@@ -36,14 +44,14 @@ import sprites as sp
 clock = pg.time.Clock()
 
 
-head = {
+head: dict[Direction, pg.Surface] = {
 direction : sp.load_sprite(sp.head[direction], CELL_SIZE)
 for direction in ('UP', 'DOWN', 'LEFT', 'RIGHT')
 }
 
-body = sp.load_sprite(sp.body, CELL_SIZE-1)
+body: pg.Surface = sp.load_sprite(sp.body, CELL_SIZE-1)
 
-tail = {
+tail: dict[Direction, pg.Surface] = {
 direction : sp.load_sprite(sp.tail[direction], CELL_SIZE)
 for direction in ('UP', 'DOWN', 'LEFT', 'RIGHT')
 }
@@ -51,20 +59,20 @@ for direction in ('UP', 'DOWN', 'LEFT', 'RIGHT')
 
 class Snake():
     """classic tile based snake with edge warping"""
-    def __init__(self, x, y):
+    def __init__(self, x: int, y: int) -> None:
         """initialise class and create list[tuple] of snakes body as per initial length"""
         self.x = x
         self.y = y
         self.init_len = 50
-        self.body = [(x-n, y) for n in range(self.init_len)]
-        self.direction = 'RIGHT'
-        self.next_direction = 'RIGHT'
-        self.alive = True
-        self.ate_food = False
-        self.score = 0
-        self.t_direction = "LEFT"
+        self.body: list[Position] = [(x-n, y) for n in range(self.init_len)]
+        self.direction: Direction = 'RIGHT'
+        self.next_direction: Direction = 'RIGHT'
+        self.alive: bool = True
+        self.ate_food: bool = False
+        self.score: int = 0
+        self.t_direction: Direction = "LEFT"
 
-    def tail_direction(self):
+    def tail_direction(self) -> None:
         tail_x, tail_y = self.body[-1]
         prev_x, prev_y = self.body[-2]
 
@@ -82,7 +90,7 @@ class Snake():
 
 
 
-    def draw(self):
+    def draw(self) -> None:
         """draws snake body
         while distinguishing between head and tail"""
         for i, coords in enumerate(self.body):
@@ -100,7 +108,7 @@ class Snake():
                 screen.blit(body, (x_px, y_px))
 
 
-    def move_and_grow(self, food):
+    def move_and_grow(self, food: Food) -> None:
         """handle movement, self collision growth and scoring"""
         self.direction = self.next_direction
 
@@ -115,6 +123,7 @@ class Snake():
         elif self.direction == 'DOWN':
             y += 1
 
+        # Wrap at the edges so the snake re-enters on the opposite side.
         x %= GRID_WIDTH
         y %= GRID_HEIGHT
 
@@ -123,6 +132,7 @@ class Snake():
 
         self.body.insert(0, new_head)
 
+        # Keep the tail in place when eating to make the snake grow.
         if not self.ate_food:
             self.body.pop()
         else:
@@ -137,7 +147,7 @@ class Snake():
         self.tail_direction()
 
 
-def draw_cells():
+def draw_cells() -> None:
     """draws the play area (grid)"""
     for x in range(
     BORDER_WIDTH,
@@ -150,7 +160,7 @@ def draw_cells():
 
 
 
-def draw_hud(player):
+def draw_hud(player: Snake) -> None:
     """draw hud and display score"""
 
     border = pg.Rect(0, 0, SCREEN_SIZE[0], SCREEN_SIZE[1] - HUD_HEIGHT )
@@ -174,13 +184,14 @@ def draw_hud(player):
 
 class Food():
     """food class"""
-    def __init__(self, player):
+    def __init__(self, player: Snake) -> None:
         """initialise the class and set initial food postion"""
-        self.position = None
+        self.position: Position | None = None
         self.spawn(player)
 
-    def spawn(self, player):
+    def spawn(self, player: Snake) -> None:
         """select a new position excluding the snake body places"""
+        # Choose only cells the snake does not currently occupy.
         available_cells = [
         (x, y)
         for x in range(GRID_WIDTH)
@@ -190,7 +201,7 @@ class Food():
         self.position = rd.choice(available_cells)
 
 
-    def draw(self):
+    def draw(self) -> None:
         """draw food"""
 
         x, y = self.position
@@ -207,7 +218,7 @@ class Food():
         )
 
 
-def handle_events(player, food):
+def handle_events(player: Snake, food: Food) -> bool:
     """handle Pygame event.
     also handle keyboard input and change direction"""
 
@@ -218,6 +229,7 @@ def handle_events(player, food):
         if event.type == MOVE_EVENT:
             player.move_and_grow(food)
         if event.type == pg.KEYDOWN:
+            # Ignore a turn directly back into the snake's current direction.
             if event.key in (pg.K_w, pg.K_UP) and player.direction != 'DOWN':
                 if player.direction != 'UP':
                     player.next_direction = 'UP'
@@ -238,7 +250,7 @@ def handle_events(player, food):
     return running
 
 
-def draw_game(player, food):
+def draw_game(player: Snake, food: Food) -> None:
     """draw the game"""
     screen.fill(BG)
     draw_cells()
@@ -253,7 +265,7 @@ def draw_game(player, food):
 
 
 
-def game():
+def game() -> None:
     """runs one match"""
     running = True
     player = Snake(4,3)
@@ -271,7 +283,7 @@ def game():
         clock.tick(FPS)
 
 
-def game_over():
+def game_over() -> bool:
     
     overlay = pg.Rect(0, 0, 500, 500)
     overlay.center = screen.get_rect().center
@@ -330,7 +342,7 @@ def game_over():
 
     return retry
 
-def main():
+def main() -> None:
     running = True
 
     while running:
@@ -349,5 +361,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-    
