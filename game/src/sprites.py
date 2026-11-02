@@ -19,7 +19,7 @@ tail = {
     for direction in ('UP', 'DOWN', 'LEFT', 'RIGHT')
 }
 
-def load_sprite(image: pg.Surface, size: int) -> pg.Surface:
+def load_sprite(image, size):
     return pg.transform.scale(image, (size, size))
 
 
